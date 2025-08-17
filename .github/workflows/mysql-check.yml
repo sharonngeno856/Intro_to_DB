@@ -1,0 +1,38 @@
+name: MySQL Schema Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  mysql-test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost -uroot -proot"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install MySQL client
+        run: sudo apt-get install -y mysql-client
+
+      - name: Run Schema File
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot < alx_book_store.sql
+
+      - name: Verify Tables
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot -D alx_book_store -e "SHOW TABLES;"
